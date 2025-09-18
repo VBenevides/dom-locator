@@ -132,7 +132,7 @@ class Locator:
         Examples
         --------
         >>> locator = Locator(xml_path="test.xml")
-        >>> locator.set_element_text("//tag1", "NewValue")
+        >>> locator.set_text("//tag1", "NewValue")
         >>> locator.save(output_path="test_modified.xml")
         """
 
@@ -174,7 +174,6 @@ class Locator:
         """
 
         return self.tree.xpath(xpath)
-        # return [etree.ElementTree(x) for x in self.tree.xpath(xpath)]
 
     def find_element(self, xpath: str) -> None | etree._Element:
         """
@@ -205,9 +204,12 @@ class Locator:
             return elements[0]
         return None
 
-    def get_element_text(self, xpath: str) -> Any | None:
+    def get_text(
+        self, element_id: str | list[str] | etree._Element, default_value: Any | None = None
+    ) -> Any | None:
         """
-        Finds an element using its XPath expression and returns its text.
+        Gets the text of an element or returns a default value if provided.
+        The element can be passed by a single xpath, a list of xpaths (in order of priority) or as an Element from find_element
 
         Parameters
         ----------
@@ -219,19 +221,44 @@ class Locator:
         str or None
             The text of the element if found, otherwise None.
 
+        Raises
+        ------
+        ElementNotFoundError
+            If no element is found with any XPath from `element_id` and the default value is None.
+
         Examples
         --------
         >>> locator = Locator(xml_path="test.xml")
-        >>> name = locator.get_element_text("//name")
+        >>> name = locator.get_text("//name")
         """
 
-        element = self.find_element(xpath)
+        element = None
+        if isinstance(element_id, etree._Element):
+            element = element_id
+        else:
+            if not isinstance(element_id, list):
+                element_id = [element_id]
 
-        if element is not None:
-            return element.text
-        return None
+            for xpath in element_id:
+                _elem = self.find_element(xpath)
+                if _elem is not None:
+                    element = _elem
+                    break
 
-    def set_element_text(self, element_id: str | etree._Element, value: Any) -> bool:
+        if isinstance(element, etree._Element):
+            return element.text  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
+        if element is None:
+            if default_value is not None:
+                return default_value
+            raise ElementNotFoundError(
+                f"It was not possible to find any elements that match element_id: {element_id}"
+            )
+        else:
+            raise AssertionError(
+                f"incorrect type for element, should be None or ElementTree. Type: {type(element)}"
+            )
+
+    def set_text(self, element_id: str | etree._Element, value: Any) -> bool:
         """
         Sets the text field of an element to a specific value.
         If `element_id` is a str, it will be treated an an XPath expression and will use it to find the element.
@@ -254,7 +281,7 @@ class Locator:
         --------
         >>> locator = Locator(xml_path="test.xml")
         >>> # Before: ...<name>John</name>...
-        >>> locator.set_element_text("//name", "Bob")
+        >>> locator.set_text("//name", "Bob")
         >>> # After: ...<name>Bob</name>...
         >>> # Save to make changes persistent
         >>> locator.save(output_path="test_modified.xml")
@@ -305,7 +332,7 @@ class Locator:
         >>>     encoding="utf-8",
         >>> )
         >>> locator.create_element_by_xpath(absolute_xpath="./user/age", allow_duplicate=False)
-        >>> locator.set_element_text(xpath="./user/age", value=25)
+        >>> locator.set_text(xpath="./user/age", value=25)
         >>> locator.save("./tests/files/output.xml")
 
         Raises
@@ -374,7 +401,7 @@ class Locator:
         >>> locator.create_child_element(
         >>>     parent_element=parent_elem, child_tag="age", allow_duplicate=False
         >>> )
-        >>> locator.set_element_text(xpath="./user/age", value=25)
+        >>> locator.set_text(xpath="./user/age", value=25)
         >>> locator.save("output.xml")
         """
 
@@ -387,59 +414,3 @@ class Locator:
             child = tmp[0]
 
         return child
-
-    def recover_text_from_xml(self, xpath_list: str | list[str], default_value: Any) -> Any:
-        """
-        Gets the text of an element in the element tree that matches one of the elements in the xpath list.
-        If the element is not found, a default value will be returned.
-        If the default value is None, raises an error.
-
-        Parameters
-        ----------
-        xpath_list : Union[str, list[str]]
-            A single XPath expression or a list of XPath expressions to search for.
-        default_value : Any
-            The default value to return if no element is found. If None, an error is raised.
-
-        Returns
-        -------
-        Any
-            The text of the found element or the default value if no element is found.
-
-        Raises
-        ------
-        ElementNotFoundError
-            If no element is found with Any XPath from `xpath_list` and the default value is None.
-
-        Examples
-        --------
-        >>> locator = Locator(
-        >>>     xml_string="<users><user><name>John</name><surname>Doe</surname></user></users>",
-        >>>     encoding="utf-8",
-        >>> )
-        >>>
-        >>> print(locator.recover_text_from_xml(["//user/name"], default_value="Not Found"))
-        """
-
-        if not isinstance(xpath_list, list):
-            xpath_list = [xpath_list]
-
-        text_found = None
-
-        # Iterates through the list and tries to find the an element
-        for xpath in xpath_list:
-            text_found = self.get_element_text(xpath)
-            if text_found is not None:
-                break
-
-        # If text was not found, use default value
-        if text_found is None:
-            text_found = default_value
-
-        # If after value is set, it's None, then we raise an error
-        if text_found is None:
-            raise ElementNotFoundError(
-                f"It was not possible to find Any elements that match the xpaths in the input: {xpath_list}"
-            )
-
-        return text_found
