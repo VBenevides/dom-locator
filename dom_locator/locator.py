@@ -24,8 +24,8 @@ class Locator:
     >>>     xml_string="<user><name>John</name><surname>Doe</surname></user>",
     >>>     encoding="utf-8",
     >>> )
-    >>> var1 = locator.recover_text_from_xml("//tag1", "Not Found") # Not Found if tag1 does not exist, else its text
-    >>> name = locator2.recover_text_from_xml("//name", None) # John
+    >>> var1 = locator.get_text("//tag1", "Not Found") # Not Found if tag1 does not exist, else its text
+    >>> name = locator2.get_text("//name", None) # John
     """
 
     def __init__(self, source: HTMLSource | DOMSource) -> None:
