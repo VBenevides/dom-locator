@@ -1,5 +1,5 @@
 """
-Create wheel for automation_logging
+Create wheel for dom_locator
 
 Use: python setup.py bdist_wheel
 """
@@ -15,4 +15,5 @@ _ = setup(
     author="Vinicius Benevides",
     author_email="viniciusm.benevides@gmail.com",
     description="Library for interacting with XML and HTML DOM ",
+    install_requires=["lxml"],
 )
