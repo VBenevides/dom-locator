@@ -15,7 +15,7 @@ class DOMSource:
             raise ValueError("path or content must be set")
 
         if path is not None and not Path(path).exists():
-            raise FileNotFoundError(f"file not found in path: {path}")
+            raise FileNotFoundError(f"file not found in path: {Path(path).absolute()}")
 
         if path is not None:
             self.source: Literal["path", "content"] = "path"
