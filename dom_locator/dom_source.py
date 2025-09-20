@@ -12,10 +12,10 @@ class DOMSource:
     ):
         """Instantiates the DOM Source object, path takes predence over content if both are present"""
         if path is None and content is None:
-            return ValueError("path or content must be set")
+            raise ValueError("path or content must be set")
 
         if path is not None and not Path(path).exists():
-            return FileNotFoundError(f"file not found in path: {path}")
+            raise FileNotFoundError(f"file not found in path: {path}")
 
         if path is not None:
             self.source: Literal["path", "content"] = "path"

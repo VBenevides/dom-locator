@@ -8,7 +8,7 @@ from setuptools import setup
 
 _ = setup(
     name="dom-locator",
-    version="0.0.1",
+    version="0.0.2",
     packages=["dom_locator"],
     url="https://github.com/VBenevides/dom-locator",
     license="MIT",

@@ -28,13 +28,13 @@ class Locator:
     >>> name = locator2.get_text("//name", None) # John
     """
 
-    def __init__(self, source: HTMLSource | DOMSource) -> None:
+    def __init__(self, source: DOMSource) -> None:
         """
         Instantiates a Locator object containing the contents of DOMSource subclasses.
 
         Parameters
         ----------
-        source : HTMLSource | DOMSource
+        source : DOMSource
             Class with DOM data inside a file or string
 
         Returns
